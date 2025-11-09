@@ -45,6 +45,13 @@ jobs:
         pip install buildozer==1.5.0 cython==0.29.36
     
     # ====== Android SDK ve Build-Tools Kurulumu ======
+    - name: Install Android SDK cmdline-tools
+      run: |
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+        curl -Lo sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9334373_latest.zip
+        unzip sdk-tools.zip -d $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+        mv $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        export PATH=$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin:$PATH
     - name: 🤖 Android SDK Kurulumu
       run: |
         SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
