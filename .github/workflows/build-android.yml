@@ -1,4 +1,4 @@
-name: Android APK Derleme (Düzeltilmiş)
+name: Android APK Derleme (Optimize Edilmiş)
 
 on:
   push:
@@ -36,152 +36,108 @@ jobs:
           zlib1g-dev libncurses5-dev \
           libncursesw5-dev libtinfo6 \
           cmake libffi-dev libssl-dev \
-          automake ccache \
-          libltdl-dev
+          automake ccache libltdl-dev wget curl
     
     - name: 🔧 Buildozer Kurulumu
       run: |
         pip install --upgrade pip
         pip install buildozer==1.5.0 cython==0.29.36
-    
-    # ====== DÜZELTME: Android SDK ve Build-Tools Kurulumu ======
+
+    # ====== Android SDK ve Build-Tools Kurulumu ======
     - name: 🤖 Android SDK Kurulumu
       run: |
-        # Android SDK dizinini oluştur
-        mkdir -p $HOME/.buildozer/android/platform/android-sdk
-        cd $HOME/.buildozer/android/platform/android-sdk
+        ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        cd $ANDROID_HOME/cmdline-tools
         
-        # Command Line Tools indir
-        echo "📥 Android Command Line Tools indiriliyor..."
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+        # Command line tools indir ve aç
+        curl -s -O https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip -q commandlinetools-linux-11076708_latest.zip
+        mkdir -p latest
+        mv cmdline-tools/* latest/ 2>/dev/null || true
+        rm commandlinetools-linux-11076708_latest.zip
         
-        # Çıkart
-        unzip -q cmdline-tools.zip
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
-        
-        # Ortam değişkenleri
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-        
-        echo "✅ Command Line Tools kuruldu"
-        
-    - name: 🛠️ Android Build-Tools Kurulumu (DÜZELTME)
+        echo "✅ Android Command Line Tools kuruldu"
+
+    - name: 🌐 PATH Ayarla
       run: |
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-        
+        echo "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$HOME/.buildozer/android/platform/android-sdk/platform-tools" >> $GITHUB_PATH
+        echo "$HOME/.buildozer/android/platform/android-sdk/build-tools/34.0.0" >> $GITHUB_PATH
+
+    - name: 🛠️ Android Build-Tools Kurulumu
+      run: |
+        ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+
         echo "📦 Android SDK bileşenleri yükleniyor..."
-        
-        # Lisansları otomatik kabul et
         yes | sdkmanager --licenses || true
-        
-        # Gerekli bileşenleri yükle
+
         sdkmanager --install \
           "build-tools;34.0.0" \
           "platforms;android-33" \
           "platform-tools" \
           "cmdline-tools;latest"
         
-        echo "✅ Build-Tools 34.0.0 kuruldu"
-        echo "✅ Platform-Tools kuruldu"
-        
-        # Kurulum kontrolü
-        ls -la $ANDROID_HOME/build-tools/
-        
+        echo "✅ Android SDK bileşenleri kuruldu"
+
     - name: 🔍 Kurulum Doğrulama
       run: |
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-        export PATH=$ANDROID_HOME/platform-tools:$PATH
-        export PATH=$ANDROID_HOME/build-tools/34.0.0:$PATH
-        
-        echo "📋 SDK Bilgileri:"
-        sdkmanager --list_installed
-        
-        echo ""
-        echo "📋 Build-Tools Konumu:"
+        ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/34.0.0:$PATH
+
+        echo "📋 Kurulu Build-Tools ve aidl kontrolü"
         which aidl || echo "⚠️ aidl PATH'de bulunamadı"
-        
-        echo ""
-        echo "📋 Dosya Kontrolü:"
-        ls -la $ANDROID_HOME/build-tools/34.0.0/ || echo "⚠️ build-tools klasörü bulunamadı"
-    
+        ls -la $ANDROID_HOME/build-tools/34.0.0/
+
     - name: 📝 buildozer.spec Oluştur/Güncelle
       run: |
         if [ ! -f buildozer.spec ]; then
-          echo "📝 buildozer.spec oluşturuluyor..."
           buildozer init
         fi
         
-        # Önemli ayarları güncelle
         sed -i 's/title = .*/title = Wordle Oyunu/' buildozer.spec
         sed -i 's/package.name = .*/package.name = wordleoyunu/' buildozer.spec
         sed -i 's/package.domain = .*/package.domain = com.wordle/' buildozer.spec
         sed -i 's/source.include_exts = .*/source.include_exts = py,png,jpg,kv,atlas,txt,json,wav/' buildozer.spec
         sed -i 's/version = .*/version = 1.0.0/' buildozer.spec
-        
-        # Requirements - KivyMD için gerekli bağımlılıklar
         sed -i 's/requirements = .*/requirements = python3,kivy==2.2.1,kivymd,pillow,sdl2_ttf/' buildozer.spec
-        
-        # Android ayarları - DÜZELTME
         sed -i 's/android.permissions = .*/android.permissions = INTERNET,ACCESS_NETWORK_STATE/' buildozer.spec
         sed -i 's/android.api = .*/android.api = 33/' buildozer.spec
         sed -i 's/android.minapi = .*/android.minapi = 21/' buildozer.spec
         sed -i 's/android.ndk = .*/android.ndk = 25b/' buildozer.spec
         sed -i 's/android.accept_sdk_license = .*/android.accept_sdk_license = True/' buildozer.spec
-        
-        # Build-tools sürümünü ekle (DÜZELTME)
+        sed -i 's/android.archs = .*/android.archs = arm64-v8a/' buildozer.spec
+
         if ! grep -q "android.build_tools_version" buildozer.spec; then
           echo "android.build_tools_version = 34.0.0" >> buildozer.spec
         fi
-        
-        # SDK path'i ekle (DÜZELTME)
+
         if ! grep -q "android.sdk_path" buildozer.spec; then
           echo "android.sdk_path = $HOME/.buildozer/android/platform/android-sdk" >> buildozer.spec
         fi
-        
-        # Mimari
-        sed -i 's/android.archs = .*/android.archs = arm64-v8a/' buildozer.spec
-        
+
         echo "✅ buildozer.spec yapılandırıldı"
-        
+
     - name: 💾 Buildozer Cache
       uses: actions/cache@v3
       with:
         path: |
           .buildozer
           !.buildozer/android/platform/android-sdk
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}-v3
+        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}-v4
         restore-keys: |
-          ${{ runner.os }}-buildozer-v3-
-    
+          ${{ runner.os }}-buildozer-v4-
+
     - name: 🏗️ APK Derleme
       run: |
-        # Ortam değişkenlerini ayarla
         export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-        export PATH=$ANDROID_HOME/platform-tools:$PATH
-        export PATH=$ANDROID_HOME/build-tools/34.0.0:$PATH
-        
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/34.0.0:$PATH
+
         echo "🚀 Derleme başlıyor..."
-        echo "📍 ANDROID_HOME: $ANDROID_HOME"
-        
-        # Derleme
         buildozer -v android debug
-        
         echo "✅ Derleme tamamlandı!"
-        
-    - name: 📊 APK Bilgileri
-      if: success()
-      run: |
-        echo "📦 Oluşturulan APK dosyaları:"
-        ls -lh bin/*.apk
-        
-        echo ""
-        echo "📏 APK boyutu:"
-        du -h bin/*.apk
-        
+
     - name: 📤 APK Upload
       if: success()
       uses: actions/upload-artifact@v4
@@ -189,25 +145,52 @@ jobs:
         name: wordle-apk
         path: bin/*.apk
         retention-days: 30
-    
+
     - name: 🎉 Release Oluştur (Tag varsa)
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
         files: bin/*.apk
-        draft: false
-        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: 📋 Derleme Logları (Hata durumunda)
+
+    - name: 📋 Hata Logları (Hata durumunda)
       if: failure()
       run: |
         echo "❌ Derleme başarısız oldu!"
-        echo ""
-        echo "📋 Son 100 satır log:"
         tail -n 100 .buildozer/logs/last_log.txt || echo "Log dosyası bulunamadı"
         
-        echo ""
-        echo "📋 Build-tools kontrolü:"
-        ls -la $HOME/.buildozer/android/platform/android-sdk/build-tools/ || echo "Build-tools bulunamadı"
+# --- Önceki adımlar aynı kalıyor ---
+
+    - name: 🛠️ Android Build-Tools Kurulumu (Otomatik Sürüm)
+      run: |
+        ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+
+        echo "📦 Android SDK bileşenleri yükleniyor..."
+
+        # Lisansları otomatik kabul et
+        yes | sdkmanager --licenses || true
+
+        # En son build-tools sürümünü al
+        LATEST_BUILD_TOOLS=$(sdkmanager --list | grep "build-tools;" | awk '{print $1}' | sort -V | tail -n1)
+        echo "📌 En son build-tools sürümü: $LATEST_BUILD_TOOLS"
+
+        # Gerekli bileşenleri yükle
+        sdkmanager --install \
+          "$LATEST_BUILD_TOOLS" \
+          "platforms;android-33" \
+          "platform-tools" \
+          "cmdline-tools;latest"
+
+        echo "✅ Android SDK bileşenleri kuruldu"
+        echo "📌 Kurulu build-tools: $LATEST_BUILD_TOOLS"
+
+    - name: 🔍 Kurulum Doğrulama
+      run: |
+        ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/*:$PATH
+
+        echo "📋 Kurulu Build-Tools ve aidl kontrolü"
+        which aidl || echo "⚠️ aidl PATH'de bulunamadı"
+        ls -la $ANDROID_HOME/build-tools/
