@@ -36,6 +36,14 @@ jobs:
           libncursesw5-dev libtinfo6 \
           cmake libffi-dev libssl-dev \
           automake ccache
+
+    - name: Android Build Tools Kurulumu
+      run: |
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/
+        sudo apt-get update
+        sudo apt-get install -y unzip wget
+        wget https://dl.google.com/android/repository/build-tools_r31.0.0-linux.zip -O build-tools.zip
+        unzip build-tools.zip -d $HOME/.buildozer/android/platform/android-sdk/build-tools
     
     - name: Buildozer Kurulumu
       run: |
