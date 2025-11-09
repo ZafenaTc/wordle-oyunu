@@ -1,0 +1,15 @@
+# Wordle Oyunu - Python Bağımlılıkları
+# Python 3.10+ gereklidir
+
+# Kivy Framework - UI/UX için
+kivy>=2.3.0
+
+# KivyMD - Material Design bileşenleri
+kivymd>=1.1.1
+
+# Opsiyonel: Android derleme için
+# buildozer>=1.5.0
+# cython>=0.29.0
+
+# Opsiyonel: iOS derleme için
+# kivy-ios>=1.3.0

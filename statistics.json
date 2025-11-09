@@ -1,0 +1,42 @@
+{
+    "games_played": 0,
+    "games_won": 0,
+    "current_streak": 0,
+    "max_streak": 0,
+    "guess_distribution": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0
+    },
+    "total_guesses": 0,
+    "best_game": null,
+    "last_played": null,
+    "by_word_length": {
+        "5": {
+            "played": 0,
+            "won": 0
+        },
+        "6": {
+            "played": 0,
+            "won": 0
+        },
+        "7": {
+            "played": 0,
+            "won": 0
+        }
+    },
+    "by_language": {
+        "tr": {
+            "played": 0,
+            "won": 0
+        },
+        "en": {
+            "played": 0,
+            "won": 0
+        }
+    }
+}

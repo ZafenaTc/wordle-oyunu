@@ -1,0 +1,87 @@
+name: Android APK Derleme
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Kodu İndir
+      uses: actions/checkout@v3
+    
+    - name: Python Kurulumu
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Java Kurulumu
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: Sistem Bağımlılıkları
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          git zip unzip \
+          autoconf libtool pkg-config \
+          zlib1g-dev libncurses5-dev \
+          libncursesw5-dev libtinfo5 \
+          cmake libffi-dev libssl-dev \
+          automake ccache
+    
+    - name: Buildozer Kurulumu
+      run: |
+        pip install --upgrade pip
+        pip install buildozer cython
+    
+    - name: Buildozer Cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          .buildozer
+        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+        restore-keys: |
+          ${{ runner.os }}-buildozer-
+    
+    - name: buildozer.spec Oluştur
+      run: |
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+          # buildozer.spec dosyasını düzenle
+          sed -i 's/title = .*/title = Wordle Oyunu/' buildozer.spec
+          sed -i 's/package.name = .*/package.name = wordleoyunu/' buildozer.spec
+          sed -i 's/package.domain = .*/package.domain = com.wordle/' buildozer.spec
+          sed -i 's/source.include_exts = .*/source.include_exts = py,png,jpg,kv,atlas,txt,json,wav/' buildozer.spec
+          sed -i 's/requirements = .*/requirements = python3,kivy,kivymd,pillow,sdl2_ttf/' buildozer.spec
+          sed -i 's/android.permissions = .*/android.permissions = INTERNET,ACCESS_NETWORK_STATE/' buildozer.spec
+          sed -i 's/android.api = .*/android.api = 33/' buildozer.spec
+          sed -i 's/android.minapi = .*/android.minapi = 21/' buildozer.spec
+          sed -i 's/android.ndk = .*/android.ndk = 25b/' buildozer.spec
+          sed -i 's/android.accept_sdk_license = .*/android.accept_sdk_license = True/' buildozer.spec
+        fi
+    
+    - name: APK Derleme
+      run: |
+        buildozer android debug
+    
+    - name: APK Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: wordle-apk
+        path: bin/*.apk
+    
+    - name: Release Oluştur (Eğer tag varsa)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: bin/*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
