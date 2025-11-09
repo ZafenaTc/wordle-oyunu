@@ -42,7 +42,7 @@ jobs:
         mkdir -p $HOME/.buildozer/android/platform/android-sdk/
         sudo apt-get update
         sudo apt-get install -y unzip wget
-        wget https://dl.google.com/android/repository/build-tools_r31.0.0-linux.zip -O build-tools.zip
+        wget https://dl.google.com/android/repository/build-tools_r34.0.0-linux.zip -O build-tools.zip
         unzip build-tools.zip -d $HOME/.buildozer/android/platform/android-sdk/build-tools
     
     - name: Buildozer Kurulumu
