@@ -35,7 +35,16 @@ jobs:
           zlib1g-dev libncurses5-dev \
           libncursesw5-dev libtinfo6 \
           cmake libffi-dev libssl-dev \
-          automake ccache
+          automake ccache wget
+    
+    - name: Android Build Tools Kurulumu
+      run: |
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+        unzip cmdline-tools.zip -d $HOME/android-sdk/cmdline-tools
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/bin:$PATH
+        yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager "build-tools;34.0.0" "platforms;android-33"
     
     - name: Buildozer Kurulumu
       run: |
@@ -45,8 +54,7 @@ jobs:
     - name: Buildozer Cache
       uses: actions/cache@v3
       with:
-        path: |
-          .buildozer
+        path: .buildozer
         key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
         restore-keys: |
           ${{ runner.os }}-buildozer-
@@ -55,7 +63,6 @@ jobs:
       run: |
         if [ ! -f buildozer.spec ]; then
           buildozer init
-          # buildozer.spec dosyasını düzenle
           sed -i 's/title = .*/title = Wordle Oyunu/' buildozer.spec
           sed -i 's/package.name = .*/package.name = wordleoyunu/' buildozer.spec
           sed -i 's/package.domain = .*/package.domain = com.wordle/' buildozer.spec
