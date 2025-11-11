@@ -80,6 +80,12 @@ jobs:
         echo "ANDROID_SDK_ROOT=$ANDROID_SDK" >> $GITHUB_ENV
         export PATH=$ANDROID_SDK/cmdline-tools/latest/bin:$PATH
         export PATH=$ANDROID_SDK/platform-tools:$PATH
+
+        # Buildozer uyumluluğu için eski SDK yolu oluşturalım
+        
+        mkdir -p $ANDROID_SDK/tools/bin
+        ln -sf $ANDROID_SDK/cmdline-tools/latest/bin/sdkmanager $ANDROID_SDK/tools/bin/sdkmanager
+
     
         yes | sdkmanager --licenses
         sdkmanager --install \
