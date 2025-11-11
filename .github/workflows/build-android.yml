@@ -50,17 +50,17 @@ jobs:
         mkdir -p $ANDROID_SDK
         cd $ANDROID_SDK
     
-        # Eski cmdline-tools tamamen temizlenir
         rm -rf $ANDROID_SDK/cmdline-tools
     
         curl -Lo cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
         unzip -q cmdline-tools.zip
         rm cmdline-tools.zip
     
-        # Çıkan klasörü latest içine taşı
-        mv cmdline-tools $ANDROID_SDK/cmdline-tools
+        # Çıkan klasör adını dinamik bul
+        DIR=$(find . -maxdepth 1 -type d -name "cmdline-tools*" ! -name "cmdline-tools" | head -n 1)
+    
         mkdir -p $ANDROID_SDK/cmdline-tools/latest
-        mv $ANDROID_SDK/cmdline-tools/* $ANDROID_SDK/cmdline-tools/latest/ || true
+        mv "$DIR"/* $ANDROID_SDK/cmdline-tools/latest/
     
         echo "ANDROID_HOME=$ANDROID_SDK" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$ANDROID_SDK" >> $GITHUB_ENV
@@ -73,6 +73,7 @@ jobs:
           "build-tools;34.0.0" \
           "platforms;android-33" \
           "platform-tools"
+
     
     - name: 🔍 Kurulum Kontrol
       run: |
