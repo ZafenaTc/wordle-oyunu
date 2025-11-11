@@ -56,11 +56,19 @@ jobs:
         unzip -q cmdline-tools.zip
         rm cmdline-tools.zip
     
-        # Çıkan klasör adını dinamik bul
-        DIR=$(find . -maxdepth 1 -type d -name "cmdline-tools*" ! -name "cmdline-tools" | head -n 1)
+        # Eğer zip içinden doğrudan "cmdline-tools" klasörü çıkmışsa
+        if [ -d "cmdline-tools/bin" ]; then
+          mv cmdline-tools $ANDROID_SDK/cmdline-tools
+        else
+          # İçerik farklı bir klasör adında geldiyse onu bul
+          ZIP_DIR=$(find . -maxdepth 1 -mindepth 1 -type d ! -name "cmdline-tools" | head -n 1)
+          mkdir -p $ANDROID_SDK/cmdline-tools
+          mv "$ZIP_DIR"/* $ANDROID_SDK/cmdline-tools/
+          rm -rf "$ZIP_DIR"
+        fi
     
         mkdir -p $ANDROID_SDK/cmdline-tools/latest
-        mv "$DIR"/* $ANDROID_SDK/cmdline-tools/latest/
+        mv $ANDROID_SDK/cmdline-tools/* $ANDROID_SDK/cmdline-tools/latest/
     
         echo "ANDROID_HOME=$ANDROID_SDK" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$ANDROID_SDK" >> $GITHUB_ENV
@@ -73,6 +81,7 @@ jobs:
           "build-tools;34.0.0" \
           "platforms;android-33" \
           "platform-tools"
+
 
     
     - name: 🔍 Kurulum Kontrol
