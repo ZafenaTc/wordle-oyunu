@@ -47,13 +47,13 @@ jobs:
     # ====== Android SDK ve Build-Tools Kurulumu ======
     - name: Install Android SDK cmdline-tools
       run: |
-        SDK=$HOME/.buildozer/android/platform/android-sdk
-        mkdir -p $SDK/cmdline-tools
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
-        unzip -q tools.zip -d $SDK/cmdline-tools
-        mv $SDK/cmdline-tools/cmdline-tools $SDK/cmdline-tools/latest
-        rm tools.zip
-    
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        cd $HOME/.buildozer/android/platform/android-sdk
+        curl -Lo cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip cmdline-tools.zip -d cmdline-tools/
+        mv cmdline-tools/cmdline-tools/* cmdline-tools/latest/
+        rm -rf cmdline-tools.zip
+        
         export ANDROID_HOME=$SDK
         export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
     
