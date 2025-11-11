@@ -54,11 +54,9 @@ jobs:
         unzip -q cmdline-tools.zip
         rm cmdline-tools.zip
     
-        # Eğer zip içeriği "cmdline-tools" klasörü ise taşı
         if [ -d "$ANDROID_SDK/cmdline-tools" ] && [ -d "$ANDROID_SDK/cmdline-tools/bin" ]; then
           mv $ANDROID_SDK/cmdline-tools $ANDROID_SDK/cmdline-tools/latest
         else
-          # Aksi durumda farklı isimli klasörü bul ve taşı
           DIR=$(ls -d */ | grep -m1 "cmdline-tools")
           mv "$DIR" $ANDROID_SDK/cmdline-tools/latest
         fi
@@ -75,9 +73,6 @@ jobs:
           "platforms;android-33" \
           "platform-tools"
     
-        echo "✅ Android SDK hazır"
-
-
     - name: 🔍 Kurulum Kontrol
       run: |
         sdkmanager --list || true
@@ -101,11 +96,11 @@ jobs:
         sed -i 's/android.minapi = .*/android.minapi = 21/' buildozer.spec
         sed -i 's/android.ndk = .*/android.ndk = 25b/' buildozer.spec
         sed -i 's/android.accept_sdk_license = .*/android.accept_sdk_license = True/' buildozer.spec
-        
+    
         if ! grep -q "android.build_tools_version" buildozer.spec; then
           echo "android.build_tools_version = 34.0.0" >> buildozer.spec
         fi
-        
+    
         if ! grep -q "android.sdk_path" buildozer.spec; then
           echo "android.sdk_path = $HOME/.buildozer/android/platform/android-sdk" >> buildozer.spec
         fi
@@ -137,5 +132,4 @@ jobs:
     - name: 📋 Derleme Logları (Hata durumunda)
       if: failure()
       run: |
-        echo "❌ Derleme başarısız oldu!"
-        tail -n 200 .buildozer/logs/last_log.txt || echo "Log dosyası bulunamadı"
+        tail -n 200 .buildozer/logs/last_log.txt || echo "Log dosyası yok"
