@@ -51,36 +51,42 @@ jobs:
         cd $ANDROID_SDK
     
         rm -rf $ANDROID_SDK/cmdline-tools
+        mkdir -p $ANDROID_SDK/cmdline-tools
+    
+        # Geçici klasöre indir
+        TMP_DIR=$ANDROID_SDK/_tmp
+        rm -rf $TMP_DIR
+        mkdir -p $TMP_DIR
+        cd $TMP_DIR
     
         curl -Lo cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
         unzip -q cmdline-tools.zip
         rm cmdline-tools.zip
     
-        # Eğer zip içinden doğrudan "cmdline-tools" klasörü çıkmışsa
-        if [ -d "cmdline-tools/bin" ]; then
-          mv cmdline-tools $ANDROID_SDK/cmdline-tools
+        # Zip içinde cmdline-tools varsa oradan taşı
+        if [ -d "$TMP_DIR/cmdline-tools" ]; then
+            mv "$TMP_DIR/cmdline-tools" "$ANDROID_SDK/cmdline-tools/latest"
         else
-          # İçerik farklı bir klasör adında geldiyse onu bul
-          ZIP_DIR=$(find . -maxdepth 1 -mindepth 1 -type d ! -name "cmdline-tools" | head -n 1)
-          mkdir -p $ANDROID_SDK/cmdline-tools
-          mv "$ZIP_DIR"/* $ANDROID_SDK/cmdline-tools/
-          rm -rf "$ZIP_DIR"
+            # Farklı isimli klasörse içini cmdline-tools/latest içine koy
+            INNER_DIR=$(find . -maxdepth 1 -mindepth 1 -type d | head -n 1)
+            mkdir -p "$ANDROID_SDK/cmdline-tools/latest"
+            mv "$INNER_DIR"/* "$ANDROID_SDK/cmdline-tools/latest/"
+            rm -rf "$INNER_DIR"
         fi
     
-        mkdir -p $ANDROID_SDK/cmdline-tools/latest
-        mv $ANDROID_SDK/cmdline-tools/* $ANDROID_SDK/cmdline-tools/latest/
+        rm -rf $TMP_DIR
     
         echo "ANDROID_HOME=$ANDROID_SDK" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$ANDROID_SDK" >> $GITHUB_ENV
         echo "$ANDROID_SDK/cmdline-tools/latest/bin" >> $GITHUB_PATH
         echo "$ANDROID_SDK/platform-tools" >> $GITHUB_PATH
-        echo "$ANDROID_SDK/build-tools/34.0.0" >> $GITHUB_PATH
     
         yes | sdkmanager --licenses
         sdkmanager --install \
           "build-tools;34.0.0" \
           "platforms;android-33" \
           "platform-tools"
+
 
 
     
