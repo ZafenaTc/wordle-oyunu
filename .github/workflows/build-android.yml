@@ -44,7 +44,7 @@ jobs:
         pip install --upgrade pip
         pip install buildozer==1.5.0 cython==0.29.36
     
-   - name: 📱 Android SDK Kurulumu
+    - name: 📱 Android SDK Kurulumu
       run: |
         ANDROID_SDK=$HOME/.buildozer/android/platform/android-sdk
         mkdir -p $ANDROID_SDK/cmdline-tools
